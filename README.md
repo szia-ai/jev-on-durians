@@ -107,7 +107,7 @@ a data card here (_placeholder_).
 ## Results
 
 <!-- RESULTS:START -->
-_Measured on 83 opinions, 2026-10-24 10:14 +08 (mode: full); local models ran on MacBook Air, Apple M2, 24 GB, Ollama 0.40.9._
+_Measured on 83 opinions, 2026-10-24 10:48 +08 (mode: full); local models ran on MacBook Air, Apple M2, 24 GB, Ollama 0.40.9._
 
 **Part 1 - accuracy, time, money** (headline = mean of aspects F1, sentiment accuracy, compares F1 and variety accuracy; prices from `config/prices.yaml`; local models cost nothing per call):
 
@@ -147,7 +147,7 @@ Accept only answers at or above a cutoff and send the rest for manual review: ac
 | ≥ 0.90 | 0.98 (71%) | 0.96 (86%) | 1.00 (30%) | 0.99 (67%) | 0.90 (12%) |
 | ≥ 0.95 | 1.00 (56%) | 0.96 (83%) | 0.99 (13%) | 0.99 (52%) | 1.00 (3%) |
 
-Charts: [cost vs accuracy](assets/charts/01_cost_vs_accuracy.png), [time per opinion](assets/charts/02_time_per_opinion.png), [accuracy by question](assets/charts/03_accuracy_by_question.png), [accuracy by language](assets/charts/04_accuracy_by_language.png), [rating vs real](assets/charts/05_rating_vs_real.png), [durian elo](assets/charts/06_durian_elo.png), [time vs accuracy local](assets/charts/07_time_vs_accuracy_local.png). The Durian Elo (part 2) is in `results/summary.md`.
+Charts: [cost vs accuracy](assets/charts/01_cost_vs_accuracy.png), [time per opinion](assets/charts/02_time_per_opinion.png), [accuracy by question](assets/charts/03_accuracy_by_question.png), [accuracy by language](assets/charts/04_accuracy_by_language.png), [rating vs real](assets/charts/05_rating_vs_real.png), [durian elo](assets/charts/06_durian_elo.png), [time vs accuracy](assets/charts/07_time_vs_accuracy.png). The Durian Elo (part 2) is in `results/summary.md`.
 
 **Observations**
 
@@ -165,4 +165,8 @@ Skipped in this run: `ollama_d1` (model not pulled (ollama pull d1)); `ollama_te
 
 - Photo: najibzamri / Pixabay.
 - Opinions: the bloggers, forum members, reviewers and journalists linked in `data/durian_opinions.csv`.
-- Licence: _placeholder_.
+- Licence: the code, the notebook, the tests and the charts are under the [MIT License](LICENSE).
+  The quotes in `data/durian_opinions.csv` are short attributed excerpts whose copyright stays with
+  their authors; the labels and metadata around them are released under
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The photo is under the
+  [Pixabay Content License](https://pixabay.com/service/license-summary/).

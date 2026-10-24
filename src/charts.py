@@ -33,7 +33,8 @@ SEQUENTIAL = [[0.0, PAPER], [0.5, SKY], [1.0, "#6F98DD"]]
 FONT = "IBM Plex Sans, Helvetica Neue, Arial, sans-serif"
 WIDTH = 1600
 HEIGHT = 1000
-MARKER = dict(size=24, line=dict(color=INK, width=1.5))
+MARKER_SIZE = 24
+MARKER = dict(size=MARKER_SIZE, line=dict(color=INK, width=1.5))
 CHART_FILES = {
     "cost_vs_accuracy": "01_cost_vs_accuracy.png",
     "time_per_opinion": "02_time_per_opinion.png",
@@ -41,7 +42,7 @@ CHART_FILES = {
     "accuracy_by_language": "04_accuracy_by_language.png",
     "rating_vs_real": "05_rating_vs_real.png",
     "durian_elo": "06_durian_elo.png",
-    "time_vs_accuracy_local": "07_time_vs_accuracy_local.png",
+    "time_vs_accuracy": "07_time_vs_accuracy.png",
 }
 
 
@@ -100,14 +101,119 @@ def _family_traces(fig: go.Figure, families: pd.Series) -> None:
         )
 
 
-def _alternating_positions(x: pd.Series) -> list[str]:
-    """Label positions alternating above and below in x order, so close points don't collide."""
-    order = x.rank(method="first")
-    positions = ["top right" if int(rank) % 2 else "bottom right" for rank in order]
-    if positions:
-        rightmost = int(np.argmax(x.to_numpy()))
-        positions[rightmost] = positions[rightmost].replace("right", "left")
-    return positions
+def _place_labels(
+    fig: go.Figure,
+    x: pd.Series,
+    y: pd.Series,
+    labels: pd.Series,
+    x_range: tuple[float, float],
+    y_range: tuple[float, float],
+    x_log: bool = False,
+    font_size: int = 21,
+) -> None:
+    """
+    Label points without overlaps: each label tries positions around its point at growing
+    distances, skipping any that would cover another label or marker; a label that had to move
+    far gets a thin leader line.
+
+    Args:
+        fig: The figure; its margins and the ranges below give the pixel geometry.
+        x: Point x values (data units).
+        y: Point y values (data units).
+        labels: One label per point.
+        x_range: The x axis range as set on the figure (log10 units when `x_log`).
+        y_range: The y axis range as set on the figure.
+        x_log: Whether the x axis is logarithmic.
+        font_size: Label font size in pixels.
+    """
+    margin = fig.layout.margin
+    left, top = float(margin.l), float(margin.t)
+    plot_width = WIDTH - left - float(margin.r)
+    plot_height = HEIGHT - top - float(margin.b)
+    x_values = np.log10(x.to_numpy(dtype=float)) if x_log else x.to_numpy(dtype=float)
+    px = left + (x_values - x_range[0]) / (x_range[1] - x_range[0]) * plot_width
+    py = (
+        top
+        + plot_height
+        - (y.to_numpy(dtype=float) - y_range[0]) / (y_range[1] - y_range[0]) * plot_height
+    )
+    radius = MARKER_SIZE / 2 + 3
+    clearance = radius + 22  # a label must not crowd someone else's point
+    markers = [
+        (cx - clearance, cy - clearance, cx + clearance, cy + clearance)
+        for cx, cy in zip(px, py, strict=True)
+    ]
+    taken: list[tuple[float, float, float, float]] = []
+    char_width, line_height = font_size * 0.56, font_size * 1.3
+    directions = [(1, -1), (1, 1), (-1, -1), (-1, 1), (1, 0), (-1, 0), (0, -1), (0, 1)]
+
+    def overlaps(box: tuple[float, float, float, float], own: int) -> bool:
+        others = [marker for index, marker in enumerate(markers) if index != own]
+        return any(
+            box[0] < other[2] and box[2] > other[0] and box[1] < other[3] and box[3] > other[1]
+            for other in [*taken, *others]
+        )
+
+    points = zip(px, py, x, y, labels, strict=True)
+    for own, (cx, cy, x_data, y_data, label) in enumerate(points):
+        width, height = len(str(label)) * char_width, line_height
+        choice = None
+        for distance in (16, 34, 60, 95, 140, 200):
+            for sx, sy in directions:
+                ax, ay = cx + sx * distance, cy + sy * distance
+                x0 = ax if sx > 0 else ax - width if sx < 0 else ax - width / 2
+                y0 = ay - height if sy < 0 else ay if sy > 0 else ay - height / 2
+                box = (x0, y0, x0 + width, y0 + height)
+                inside = (
+                    left <= x0
+                    and box[2] <= left + plot_width
+                    and top <= y0
+                    and box[3] <= top + plot_height
+                )
+                if inside and not overlaps(box, own):
+                    choice = (sx * distance, sy * distance, sx, sy, box, distance)
+                    break
+            if choice:
+                break
+        if choice is None:
+            choice = (16, -16, 1, -1, (cx + 16, cy - 16 - height, cx + 16 + width, cy - 16), 16)
+        dx, dy, sx, sy, box, distance = choice
+        taken.append(box)
+        x_pos = float(np.log10(x_data)) if x_log else x_data  # log axes take log10 positions
+        fig.add_annotation(
+            x=x_pos,
+            y=y_data,
+            text=str(label),
+            xshift=dx,
+            yshift=-dy,
+            xanchor="left" if sx > 0 else "right" if sx < 0 else "center",
+            yanchor="bottom" if sy < 0 else "top" if sy > 0 else "middle",
+            showarrow=False,
+            font=dict(size=font_size),
+        )
+        if distance > 20:  # a leader line from the marker's edge to the nearest point of the label
+            bx, by = min(max(cx, box[0]), box[2]), min(max(cy, box[1]), box[3])
+            vx, vy = bx - cx, by - cy
+            norm = float(np.hypot(vx, vy)) or 1.0
+            sx0, sy0 = cx + vx / norm * radius, cy + vy / norm * radius
+
+            def to_x(value: float) -> float:
+                return x_range[0] + (value - left) / plot_width * (x_range[1] - x_range[0])
+
+            def to_y(value: float) -> float:
+                return y_range[0] + (top + plot_height - value) / plot_height * (
+                    y_range[1] - y_range[0]
+                )
+
+            fig.add_shape(  # unlike annotations, shapes on a log axis take raw values
+                type="line",
+                x0=10 ** to_x(sx0) if x_log else to_x(sx0),
+                y0=to_y(sy0),
+                x1=10 ** to_x(bx) if x_log else to_x(bx),
+                y1=to_y(by),
+                line=dict(color=GRAPHITE, width=1.2),
+                layer="above",
+            )
 
 
 def _log_ticks(low: float, high: float) -> list[float]:
@@ -164,8 +270,7 @@ def cost_vs_accuracy(summary: pd.DataFrame, path: Path, date: str) -> go.Figure:
     lowest_paid = float(paid["usd_per_1m_opinions"].min()) if not paid.empty else 100.0
     free_x = 10 ** (np.floor(np.log10(lowest_paid)) - 1)
     x = summary["usd_per_1m_opinions"].where(~summary["local"], free_x).astype(float)
-    top = max(float(x.max()) * 4, free_x * 100) if len(x) else free_x * 100
-    positions = _alternating_positions(x)
+    top = max(float(x.max()) * 6, free_x * 100) if len(x) else free_x * 100
     for fill in dict.fromkeys(FAMILY_FILLS[family] for family in summary["family"]):
         mask = summary["family"].map(FAMILY_FILLS) == fill
         rows = summary[mask]
@@ -173,11 +278,8 @@ def cost_vs_accuracy(summary: pd.DataFrame, path: Path, date: str) -> go.Figure:
             go.Scatter(
                 x=x[mask],
                 y=rows["headline"],
-                mode="markers+text",
+                mode="markers",
                 text=rows["label"],
-                textposition=[pos for pos, keep in zip(positions, mask, strict=True) if keep],
-                textfont=dict(size=21),
-                cliponaxis=False,
                 marker=dict(color=fill, **MARKER),
                 name=FAMILY_LEGEND[fill],
                 customdata=rows["usd_per_1m_opinions"],
@@ -186,13 +288,15 @@ def cost_vs_accuracy(summary: pd.DataFrame, path: Path, date: str) -> go.Figure:
             )
         )
     ticks = [free_x, *[10.0**k for k in range(int(np.log10(free_x)) + 1, int(np.log10(top)) + 1)]]
+    x_range = (float(np.log10(free_x / 2)), float(np.log10(top)))
     fig.update_xaxes(
         type="log",
-        range=[np.log10(free_x / 2), np.log10(top)],
+        range=list(x_range),
         tickvals=ticks,
         ticktext=["free", *[f"{tick:g}" for tick in ticks[1:]]],
     )
     fig.update_yaxes(range=[0, 1.02])
+    _place_labels(fig, x, summary["headline"], summary["label"], x_range, (0, 1.02), x_log=True)
     fig.update_layout(legend=dict(x=0.98, y=0.04, xanchor="right", yanchor="bottom"))
     _save(fig, path)
     return fig
@@ -249,7 +353,7 @@ def time_per_opinion(summary: pd.DataFrame, path: Path, date: str) -> go.Figure:
     fig.update_xaxes(range=[0, float(ordered["p95_s"].max()) * 1.35])
     fig.update_yaxes(showgrid=False, ticks="")
     fig.update_layout(
-        legend=dict(x=0.98, y=0.02, xanchor="right", yanchor="bottom"), margin=dict(l=40)
+        legend=dict(x=0.98, y=0.98, xanchor="right", yanchor="top"), margin=dict(l=40)
     )
     _save(fig, path)
     return fig
@@ -481,12 +585,12 @@ def durian_elo(
     return fig
 
 
-def time_vs_accuracy_local(summary: pd.DataFrame, path: Path, date: str, machine: str) -> go.Figure:
+def time_vs_accuracy(summary: pd.DataFrame, path: Path, date: str, machine: str) -> go.Figure:
     """
-    Chart 7: for the local models, seconds per opinion (p50, log x) vs headline accuracy.
+    Chart 7: seconds per opinion (p50, log x) vs headline accuracy for every solution.
 
     Args:
-        summary: The part-1 table (`label`, `family`, `local`, `headline`, `p50_s`, `p95_s`).
+        summary: The part-1 table (`label`, `family`, `headline`, `p50_s`, `p95_s`).
         path: Where to save the PNG.
         date: The date for the source line.
         machine: What the local models ran on, for the title.
@@ -495,51 +599,43 @@ def time_vs_accuracy_local(summary: pd.DataFrame, path: Path, date: str, machine
         The figure (also saved to `path`).
     """
     fig = _figure(
-        f"Local models: time vs accuracy ({machine})",
+        f"Time vs accuracy (local models on {machine})",
         date,
-        "seconds per opinion (p50, one request with 18 questions; no network)",
+        "seconds per opinion, p50 (cloud calls include the round trip from Singapore)",
         "headline accuracy",
     )
-    local = summary[summary["local"]].dropna(subset=["p50_s", "headline"])
-    if local.empty:
-        _empty_note(fig, "no local model ran in this run")
+    timed = summary.dropna(subset=["p50_s", "headline"])
+    if timed.empty:
+        _empty_note(fig, "no timed solution in this run")
         _save(fig, path)
         return fig
-    positions = _alternating_positions(local["p50_s"])
-    for family, symbol, name in (
-        ("decision_local", "circle", "decision models (local)"),
-        ("llm_local", "diamond", "LLMs (local)"),
-    ):
-        mask = local["family"] == family
-        rows = local[mask]
-        if rows.empty:
-            continue
+    for fill in dict.fromkeys(FAMILY_FILLS[family] for family in timed["family"]):
+        mask = timed["family"].map(FAMILY_FILLS) == fill
+        rows = timed[mask]
         fig.add_trace(
             go.Scatter(
                 x=rows["p50_s"],
                 y=rows["headline"],
-                mode="markers+text",
+                mode="markers",
                 text=rows["label"],
-                textposition=[pos for pos, keep in zip(positions, mask, strict=True) if keep],
-                textfont=dict(size=21),
-                cliponaxis=False,
-                marker=dict(color=AQUA, symbol=symbol, **MARKER),
-                name=name,
+                marker=dict(color=fill, **MARKER),
+                name=FAMILY_LEGEND[fill],
                 customdata=rows["p95_s"],
                 hovertemplate="%{text}<br>p50 %{x:.2f} s · p95 %{customdata:.2f} s<br>"
                 "headline %{y:.2f}<extra></extra>",
             )
         )
-    low, high = float(local["p50_s"].min()) / 3, float(local["p50_s"].max()) * 4
+    low, high = float(timed["p50_s"].min()) / 3, float(timed["p50_s"].max()) * 6
     ticks = _log_ticks(low, high)
+    x_range = (float(np.log10(low)), float(np.log10(high)))
     fig.update_xaxes(
-        type="log",
-        range=[np.log10(low), np.log10(high)],
-        tickvals=ticks,
-        ticktext=[f"{tick:g}" for tick in ticks],
+        type="log", range=list(x_range), tickvals=ticks, ticktext=[f"{tick:g}" for tick in ticks]
     )
     fig.update_yaxes(range=[0, 1.02])
     fig.update_layout(legend=dict(x=0.98, y=0.04, xanchor="right", yanchor="bottom"))
+    _place_labels(
+        fig, timed["p50_s"], timed["headline"], timed["label"], x_range, (0, 1.02), x_log=True
+    )
     _save(fig, path)
     return fig
 
@@ -584,7 +680,5 @@ def save_all(
         ),
         "rating_vs_real": rating_vs_real(points, files["rating_vs_real"], date),
         "durian_elo": durian_elo(gold_history, final_by_solution, files["durian_elo"], date),
-        "time_vs_accuracy_local": time_vs_accuracy_local(
-            summary, files["time_vs_accuracy_local"], date, machine
-        ),
+        "time_vs_accuracy": time_vs_accuracy(summary, files["time_vs_accuracy"], date, machine),
     }

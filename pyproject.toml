@@ -3,6 +3,8 @@ name = "jev-on-durians"
 version = "0.1.0"
 description = "Decision models (Jev, Kev and co.) vs LLMs on 83 durian opinions - a tutorial notebook and a benchmark"
 requires-python = ">=3.14"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
     "requests>=2.32",
     "openai>=3.19",
