@@ -16,6 +16,7 @@ from metrics import (
     f1_binary,
     macro_f1,
     rating_points,
+    review_curve,
     spearman,
     summary_table,
     time_table,
@@ -87,6 +88,7 @@ def test_perfect_answers_score_one(opinions: pd.DataFrame) -> None:
     assert row["preferred_acc"] == 1.0
     assert row["variety_acc"] == 1.0
     assert row["headline"] == 1.0
+    assert row["answer_acc"] == 1.0
     assert row["n_answered"] == 6 and row["n_errors"] == 0
     assert row["headline_zh"] == 1.0
     assert row["n_rated"] == 2
@@ -103,6 +105,7 @@ def test_one_wrong_answer_lowers_the_right_metric(opinions: pd.DataFrame) -> Non
     row = table.loc["flawed"]
     assert row["n_answered"] == 5 and row["n_errors"] == 1
     assert row["overall_sentiment_acc"] == pytest.approx(4 / 5)
+    assert row["answer_acc"] == pytest.approx(1 - 2 / 45)  # 45 scored answers, two wrong
     assert row["aspects_f1"] < 1.0
     assert row["compares_f1"] == 1.0
 
@@ -187,3 +190,19 @@ def test_confidence_tables_without_decision_models() -> None:
     cutoff_accuracy, share = cutoff_table(nothing)
     assert cutoff_accuracy.empty and share.empty
     assert annotate(accuracy, counts).empty
+
+
+def test_review_curve_removes_the_least_confident_first() -> None:
+    confidences = pd.DataFrame(
+        {
+            "solution": ["a"] * 10,
+            "opinion_id": [str(i) for i in range(10)],
+            "question": ["compares"] * 10,
+            "confidence": [0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99],
+            "correct": [False, False, True, True, True, True, True, True, True, True],
+        }
+    )
+    curve = review_curve(confidences, shares=(0.0, 0.1, 0.2, 0.3))
+    assert curve["accuracy"].tolist() == pytest.approx([0.8, 8 / 9, 1.0, 1.0])
+    assert curve["kept"].tolist() == [10, 9, 8, 7]
+    assert review_curve(confidences.iloc[:0]).empty

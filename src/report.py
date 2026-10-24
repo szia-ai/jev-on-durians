@@ -15,6 +15,7 @@ PART1_COLUMNS = {
     "label": "solution",
     "family": "family",
     "headline": "headline",
+    "answer_acc": "answer acc",
     "aspects_f1": "aspects F1",
     "overall_sentiment_acc": "sentiment acc",
     "compares_f1": "compares F1",
@@ -49,8 +50,9 @@ CONFIDENCE_CAPTION = (
     "are left out):"
 )
 CUTOFF_CAPTION = (
-    "Accept only answers at or above a cutoff and send the rest for manual review: accuracy of "
-    "the accepted answers, with the share of answers accepted in brackets:"
+    "Accept only answers at or above a cutoff and send the rest for manual review: answer "
+    "accuracy of the accepted answers (the 'answer acc' of part 1 when everything is accepted), "
+    "with the share of answers accepted in brackets:"
 )
 FAMILY_NAMES = {
     "decision_cloud": "decision, cloud",
@@ -308,8 +310,8 @@ def results_block(
     """
     The Markdown that goes between the RESULTS markers of `README.md`.
 
-    Part 2 (the Elo and the ratings) stays in `results/summary.md`; the README gets part 1, the
-    confidence tables, the chart links and the observations.
+    Part 2 (the Elo, the ratings and the Elo chart) stays in `results/summary.md`; the README gets
+    part 1, the confidence tables, the other chart links and the observations.
 
     Args:
         summary: The part-1 table.
@@ -327,14 +329,16 @@ def results_block(
     links = ", ".join(
         f"[{path.stem[3:].replace('_', ' ')}]({Path('assets/charts') / path.name})"
         for path in chart_paths
+        if "elo" not in path.name  # part 2 stays out of the README
     )
     parts = [
         f"_Measured on {info.n_opinions} opinions, {info.timestamp} (mode: {info.mode})"
         + (f"; local models ran on {info.machine}._" if info.machine else "._"),
         "",
         "**Part 1 - accuracy, time, money** (headline = mean of aspects F1, sentiment accuracy, "
-        "compares F1 and variety accuracy; prices from `config/prices.yaml`; local models cost "
-        "nothing per call):",
+        "compares F1 and variety accuracy; answer acc = the share of all gold-scored answers that "
+        "are right, the measure the confidence tables filter; prices from `config/prices.yaml`; "
+        "local models cost nothing per call):",
         "",
         part1_markdown(summary),
         "",
@@ -348,7 +352,7 @@ def results_block(
             if cutoffs is not None and not cutoffs.empty
             else []
         ),
-        f"Charts: {links}. The Durian Elo (part 2) is in `results/summary.md`.",
+        f"Charts: {links}.",
         "",
         "**Observations**",
         "",

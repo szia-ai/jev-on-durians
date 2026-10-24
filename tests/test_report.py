@@ -27,6 +27,7 @@ def summary() -> pd.DataFrame:
             "family": ["decision_cloud", "llm_local"],
             "local": [False, True],
             "headline": [0.8, 0.6],
+            "answer_acc": [0.91, 0.69],
             "aspects_f1": [0.9, 0.7],
             "overall_sentiment_acc": [0.8, 0.5],
             "compares_f1": [0.7, 0.6],
@@ -98,9 +99,14 @@ def test_results_block_and_summary(summary: pd.DataFrame, elo: pd.DataFrame) -> 
         {"musang_king": [0.6, 0.7], "black_thorn": [0.8, 0.75], "red_prawn": [0.85, 0.7]},
         index=pd.Index(["gold", "jev"], name="rater"),
     )
-    block = results_block(summary, elo, info, [Path("assets/charts/01_cost_vs_accuracy.png")])
+    charts = [
+        Path("assets/charts/01_cost_vs_accuracy.png"),
+        Path("assets/charts/06_durian_elo.png"),
+    ]
+    block = results_block(summary, elo, info, charts)
+    assert "06_durian_elo" not in block
     assert "Measured on 83 opinions, 2026-10-23 22:00 +08" in block
-    assert "| 1 | Jev | decision, cloud | 0.80 |" in block
+    assert "| 1 | Jev | decision, cloud | 0.80 | 0.91 |" in block
     assert "| gold | 1430 | 1580 | 1613 |" not in block  # part 2 stays in summary.md
     assert "Mean overall rating per durian" not in block
     assert "[cost vs accuracy](assets/charts/01_cost_vs_accuracy.png)" in block

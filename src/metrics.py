@@ -26,11 +26,13 @@ GOLD_QUESTIONS = (
 )
 CONFIDENCE_EDGES = (0.0, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1.0)
 CUTOFFS = (0.0, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95)
+REVIEW_SHARES = tuple(round(0.05 * step, 2) for step in range(8))  # 0, 5, ... 35 percent
 SCORE_KEYS = (
     *QUESTION_LABELS,
     "overall_sentiment_macro_f1",
     "rating_mae",
     "n_rated",
+    "answer_acc",
     "headline",
 )
 
@@ -107,9 +109,10 @@ def score_answers(merged: pd.DataFrame) -> dict[str, float]:
     Returns:
         aspects micro-F1 (threshold 0.5), overall-sentiment accuracy and macro-F1, compares F1,
         preferred accuracy (where gold compares), variety accuracy (where the quote names its
-        durian), the rating's Spearman ρ and MAE against the writers' own scores, and the
-        headline: the mean of aspects F1, overall-sentiment accuracy, compares F1 and variety
-        accuracy over the parts that are defined.
+        durian), the rating's Spearman ρ and MAE against the writers' own scores, `answer_acc`
+        (the share of all gold-scored answers that are right, the measure the confidence tables
+        filter) and the headline: the mean of aspects F1, overall-sentiment accuracy, compares F1
+        and variety accuracy over the parts that are defined.
     """
     if merged.empty:
         return {key: float("nan") for key in SCORE_KEYS}
@@ -137,6 +140,12 @@ def score_answers(merged: pd.DataFrame) -> dict[str, float]:
         else float("nan"),
         "n_rated": float(len(rated)),
     }
+    correct = total = 0
+    for question in GOLD_QUESTIONS:
+        subset, gold, answer = _gold_and_answer(merged, question)
+        correct += int((gold.to_numpy() == answer.to_numpy()).sum())
+        total += len(subset)
+    scores["answer_acc"] = correct / total if total else float("nan")
     parts = [scores[part] for part in HEADLINE_PARTS if not np.isnan(scores[part])]
     scores["headline"] = float(np.mean(parts)) if parts else float("nan")
     return scores
@@ -413,3 +422,36 @@ def annotate(
         for column in values.columns
     }
     return pd.DataFrame(cells, index=values.index)
+
+
+def review_curve(
+    confidences: pd.DataFrame, shares: tuple[float, ...] = REVIEW_SHARES
+) -> pd.DataFrame:
+    """
+    Accuracy of the answers kept when the least confident share goes to a person for review.
+
+    For each solution the gold-scored answers are sorted by confidence; for every review share the
+    lowest `share` of them is removed and the accuracy of the rest computed.
+
+    Args:
+        confidences: From `answer_confidences`.
+        shares: The review shares to try, 0 meaning "accept everything".
+
+    Returns:
+        Long frame: `solution`, `review_share`, `accuracy`, `kept` (answers kept).
+    """
+    columns = ["solution", "review_share", "accuracy", "kept"]
+    rows = []
+    for solution, group in confidences.groupby("solution", sort=False):
+        ordered = group.sort_values("confidence", kind="stable")["correct"].to_numpy(dtype=bool)
+        for share in shares:
+            kept = ordered[int(np.floor(share * len(ordered))) :]
+            rows.append(
+                {
+                    "solution": str(solution),
+                    "review_share": share,
+                    "accuracy": float(kept.mean()) if len(kept) else float("nan"),
+                    "kept": int(len(kept)),
+                }
+            )
+    return pd.DataFrame(rows, columns=columns)
