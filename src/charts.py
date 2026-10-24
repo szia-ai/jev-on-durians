@@ -43,6 +43,7 @@ CHART_FILES = {
     "rating_vs_real": "05_rating_vs_real.png",
     "durian_elo": "06_durian_elo.png",
     "time_vs_accuracy": "07_time_vs_accuracy.png",
+    "accept_or_review": "08_accept_or_review.png",
 }
 
 
@@ -640,6 +641,164 @@ def time_vs_accuracy(summary: pd.DataFrame, path: Path, date: str, machine: str)
     return fig
 
 
+def accept_or_review(
+    review: pd.DataFrame,
+    summary: pd.DataFrame,
+    n_opinions: int,
+    path: Path,
+    date: str,
+    floor: float = 0.85,
+) -> go.Figure:
+    """
+    Chart 8: accuracy of the answers kept vs the share sent to a person for review.
+
+    One line per decision model (the least confident answers go first); LLMs have no confidence
+    to sort on, so they sit at zero review as dots. The best line is drawn in ink and gets a
+    callout at the 15 percent mark.
+
+    Args:
+        review: From `metrics.review_curve` (decision models only).
+        summary: The part-1 table, for the LLMs' `answer_acc` and labels.
+        n_opinions: How many opinions were scored, for the subtitle.
+        path: Where to save the PNG.
+        date: The date for the source line.
+        floor: The lowest accuracy shown; lines that never reach it are listed in a footnote.
+
+    Returns:
+        The figure (also saved to `path`).
+    """
+    fig = _figure(
+        "Accept or review",
+        date,
+        "share of answers sent to a person for review (the least confident first)",
+        "accuracy of the answers kept",
+    )
+    answers_per_solution = int(review["kept"].max()) if len(review) else 0
+    fig.update_layout(
+        title=dict(
+            text="<b>Accept or review</b>",
+            subtitle=dict(
+                text=f"{n_opinions} opinions · {answers_per_solution} gold-scored answers per "
+                "solution. Raise the confidence cutoff: fewer answers go through automatically, "
+                "and those that do are more often right.",
+                font=dict(size=20, color=GRAPHITE),
+            ),
+        ),
+        margin=dict(t=150),
+    )
+    x_max = float(review["review_share"].max()) if len(review) else 0.35
+    x_range, y_range = (-0.012, x_max * 1.3), (floor, 1.012)
+    fig.update_xaxes(range=list(x_range), tickformat=".0%", dtick=0.05)
+    fig.update_yaxes(range=list(y_range), tickformat=".0%")
+    if review.empty:
+        _empty_note(fig, "no decision model ran in this run")
+        _save(fig, path)
+        return fig
+
+    final = review[review["review_share"] == x_max].set_index("solution")["accuracy"]
+    ranked = list(final.sort_values(ascending=False).index)
+    shown = [solution for solution in ranked if final[solution] >= floor]
+    hidden = [solution for solution in ranked if final[solution] < floor]
+    dashes = ["solid", "dot", "dash", "dashdot", "longdash"]
+    label_x: list[float] = []
+    label_y: list[float] = []
+    label_text: list[str] = []
+    for index, solution in enumerate(shown):
+        curve = review[review["solution"] == solution]
+        best = index == 0
+        fig.add_trace(
+            go.Scatter(
+                x=curve["review_share"],
+                y=curve["accuracy"],
+                mode="lines+markers",
+                line=dict(
+                    color=INK if best else GRAPHITE,
+                    width=4 if best else 2.5,
+                    dash="solid" if best else dashes[index % len(dashes)],
+                ),
+                marker=dict(size=9 if best else 7, color=INK if best else GRAPHITE),
+                name=str(solution),
+                showlegend=False,
+                customdata=curve["kept"],
+                hovertemplate=f"{solution}<br>%{{x:.1%}} reviewed: %{{y:.1%}} right "
+                "(%{customdata} answers kept)<extra></extra>",
+            )
+        )
+        label_x.append(float(curve["review_share"].iloc[-1]))
+        label_y.append(float(curve["accuracy"].iloc[-1]))
+        label_text.append(str(solution).replace(" (", "<br>("))
+    llms = summary[~summary["family"].str.startswith("decision")].dropna(subset=["answer_acc"])
+    llms = llms[llms["answer_acc"] >= floor]
+    if not llms.empty:
+        fig.add_trace(
+            go.Scatter(
+                x=[0.0] * len(llms),
+                y=llms["answer_acc"],
+                mode="markers",
+                marker=dict(color=CORAL, **MARKER),
+                name="LLMs",
+                showlegend=False,
+                text=llms["label"],
+                hovertemplate="%{text}: %{y:.1%} right, no confidence to cut on<extra></extra>",
+            )
+        )
+        label_x += [0.0] * len(llms)
+        label_y += [float(value) for value in llms["answer_acc"]]
+        label_text += [
+            f"{label} {value:.1%}"
+            for label, value in zip(llms["label"], llms["answer_acc"], strict=True)
+        ]
+    _place_labels(
+        fig,
+        pd.Series(label_x),
+        pd.Series(label_y),
+        pd.Series(label_text),
+        x_range,
+        y_range,
+        font_size=19,
+    )
+    if shown:
+        best_solution = shown[0]
+        curve = review[review["solution"] == best_solution]
+        mark = curve.iloc[int((curve["review_share"] - 0.15).abs().argmin())]
+        fig.add_annotation(
+            x=float(mark["review_share"]),
+            y=float(mark["accuracy"]),
+            text=f"<b>{best_solution}: send {mark['review_share']:.0%} to review, "
+            f"{mark['accuracy']:.0%} of the rest are right</b>",
+            ax=-30,
+            ay=-110,
+            xanchor="center",
+            showarrow=True,
+            arrowhead=0,
+            arrowwidth=1.5,
+            arrowcolor=INK,
+            bgcolor=SUN,
+            bordercolor=INK,
+            borderwidth=1,
+            borderpad=6,
+            font=dict(size=20),
+        )
+    notes = ["LLMs: no confidence, nothing to cut on"] if not llms.empty else []
+    if hidden:
+        notes.append(f"below {floor:.0%} at every cutoff: " + ", ".join(hidden))
+    if notes:
+        fig.add_annotation(
+            text="<br>".join(notes),
+            xref="paper",
+            yref="paper",
+            x=0.98,
+            y=0.03,
+            xanchor="right",
+            yanchor="bottom",
+            showarrow=False,
+            align="right",
+            font=dict(size=19, color=GRAPHITE),
+        )
+    _save(fig, path)
+    return fig
+
+
 def save_all(
     summary: pd.DataFrame,
     by_question: pd.DataFrame,
@@ -650,9 +809,11 @@ def save_all(
     out_dir: Path,
     date: str,
     machine: str = "local machine",
+    review: pd.DataFrame | None = None,
+    n_opinions: int = 0,
 ) -> dict[str, go.Figure]:
     """
-    Draw and save the seven charts.
+    Draw and save the eight charts.
 
     Args:
         summary: The part-1 table.
@@ -664,6 +825,8 @@ def save_all(
         out_dir: The folder for the PNGs, e.g. `assets/charts`.
         date: The date for the source lines.
         machine: What the local models ran on, for chart 7's title.
+        review: From `metrics.review_curve`; an empty chart 8 when None.
+        n_opinions: How many opinions were scored, for chart 8's subtitle.
 
     Returns:
         The figures by chart name, in the order of `CHART_FILES`.
@@ -681,4 +844,13 @@ def save_all(
         "rating_vs_real": rating_vs_real(points, files["rating_vs_real"], date),
         "durian_elo": durian_elo(gold_history, final_by_solution, files["durian_elo"], date),
         "time_vs_accuracy": time_vs_accuracy(summary, files["time_vs_accuracy"], date, machine),
+        "accept_or_review": accept_or_review(
+            review
+            if review is not None
+            else pd.DataFrame(columns=["solution", "review_share", "accuracy", "kept"]),
+            summary,
+            n_opinions,
+            files["accept_or_review"],
+            date,
+        ),
     }

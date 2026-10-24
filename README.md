@@ -107,21 +107,21 @@ a data card here (_placeholder_).
 ## Results
 
 <!-- RESULTS:START -->
-_Measured on 83 opinions, 2026-10-24 10:48 +08 (mode: full); local models ran on MacBook Air, Apple M2, 24 GB, Ollama 0.40.9._
+_Measured on 83 opinions, 2026-10-24 17:11 +08 (mode: full); local models ran on MacBook Air, Apple M2, 24 GB, Ollama 0.40.9._
 
-**Part 1 - accuracy, time, money** (headline = mean of aspects F1, sentiment accuracy, compares F1 and variety accuracy; prices from `config/prices.yaml`; local models cost nothing per call):
+**Part 1 - accuracy, time, money** (headline = mean of aspects F1, sentiment accuracy, compares F1 and variety accuracy; answer acc = the share of all gold-scored answers that are right, the measure the confidence tables filter; prices from `config/prices.yaml`; local models cost nothing per call):
 
-| # | solution | family | headline | aspects F1 | sentiment acc | compares F1 | preferred acc | variety acc | p50 s | p95 s | USD run | USD / 1M opinions |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Claude Opus 5.5 (reference) | reference LLM | 0.95 | 0.95 | 0.88 | 0.98 | 0.95 | 0.97 | 5.06 | 8.47 | 1.7820 | 21469.40 |
-| 2 | GPT-6 Luna (LLM) | LLM, cloud | 0.93 | 0.95 | 0.86 | 0.96 | 0.55 | 0.97 | 3.12 | 4.09 | 0.0073 | 88.10 |
-| 3 | GPT-5.6 Terra (LLM) | LLM, cloud | 0.92 | 0.93 | 0.86 | 0.93 | 0.59 | 0.97 | 2.31 | 4.36 | 0.4128 | 4973.83 |
-| 4 | Jev (TypeSafe) | decision, cloud | 0.87 | 0.90 | 0.76 | 0.88 | 0.73 | 0.93 | 0.30 | 0.45 | 0.0059 | 71.51 |
-| 5 | OpenAI Decisions (GPT-6 Luna) | decision, cloud | 0.85 | 0.85 | 0.76 | 0.86 | 0.50 | 0.93 | 0.51 | 0.78 | 0.0264 | 317.59 |
-| 6 | Clef Flash-9B (Cloudflare, Ollama) | decision, local | 0.84 | 0.89 | 0.64 | 0.89 | 0.59 | 0.95 | 31.10 | 35.17 | 0.0000 | 0.00 |
-| 7 | Kev-4B (Ollama) | decision, local | 0.79 | 0.85 | 0.52 | 0.83 | 0.55 | 0.95 | 7.47 | 8.06 | 0.0000 | 0.00 |
-| 8 | qwen3:8b (local LLM, Ollama) | LLM, local | 0.50 | 0.69 | 0.57 | 0.71 | 0.50 | 0.03 | 18.69 | 22.89 | 0.0000 | 0.00 |
-| 9 | Laya (encoder, Ollama) | decision, local | 0.43 | 0.36 | 0.60 | 0.38 | 0.23 | 0.40 | 1.34 | 1.58 | 0.0000 | 0.00 |
+| # | solution | family | headline | answer acc | aspects F1 | sentiment acc | compares F1 | preferred acc | variety acc | p50 s | p95 s | USD run | USD / 1M opinions |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | Claude Opus 5.5 (reference) | reference LLM | 0.95 | 0.96 | 0.95 | 0.88 | 0.98 | 0.95 | 0.97 | 5.06 | 8.47 | 1.7820 | 21469.40 |
+| 2 | GPT-6 Luna (LLM) | LLM, cloud | 0.93 | 0.94 | 0.95 | 0.86 | 0.96 | 0.55 | 0.97 | 3.12 | 4.09 | 0.0073 | 88.10 |
+| 3 | GPT-5.6 Terra (LLM) | LLM, cloud | 0.92 | 0.94 | 0.93 | 0.86 | 0.93 | 0.59 | 0.97 | 2.31 | 4.36 | 0.4128 | 4973.83 |
+| 4 | Jev (TypeSafe) | decision, cloud | 0.87 | 0.91 | 0.90 | 0.76 | 0.88 | 0.73 | 0.93 | 0.30 | 0.45 | 0.0059 | 71.51 |
+| 5 | OpenAI Decisions (GPT-6 Luna) | decision, cloud | 0.85 | 0.88 | 0.85 | 0.76 | 0.86 | 0.50 | 0.93 | 0.51 | 0.78 | 0.0264 | 317.59 |
+| 6 | Clef Flash-9B (Cloudflare, Ollama) | decision, local | 0.84 | 0.89 | 0.89 | 0.64 | 0.89 | 0.59 | 0.95 | 31.10 | 35.17 | 0.0000 | 0.00 |
+| 7 | Kev-4B (Ollama) | decision, local | 0.79 | 0.86 | 0.85 | 0.52 | 0.83 | 0.55 | 0.95 | 7.47 | 8.06 | 0.0000 | 0.00 |
+| 8 | qwen3:8b (local LLM, Ollama) | LLM, local | 0.50 | 0.69 | 0.69 | 0.57 | 0.71 | 0.50 | 0.03 | 18.69 | 22.89 | 0.0000 | 0.00 |
+| 9 | Laya (encoder, Ollama) | decision, local | 0.43 | 0.69 | 0.36 | 0.60 | 0.38 | 0.23 | 0.40 | 1.34 | 1.58 | 0.0000 | 0.00 |
 
 Accuracy by confidence bin for the decision models (confidence = the probability of the answer given; the number of gold-scored answers in brackets; LLMs give no probability and are left out):
 
@@ -135,7 +135,7 @@ Accuracy by confidence bin for the decision models (confidence = the probability
 | 0.50 - 0.60 | 0.59 (22) | 0.43 (14) | 0.50 (86) | 0.50 (30) | 0.45 (64) |
 | < 0.50 | 0.14 (7) | 0.18 (17) | 0.36 (36) | 0.37 (19) | 0.33 (40) |
 
-Accept only answers at or above a cutoff and send the rest for manual review: accuracy of the accepted answers, with the share of answers accepted in brackets:
+Accept only answers at or above a cutoff and send the rest for manual review: answer accuracy of the accepted answers (the 'answer acc' of part 1 when everything is accepted), with the share of answers accepted in brackets:
 
 | cutoff | Jev (TypeSafe) | OpenAI Decisions (GPT-6 Luna) | Kev-4B (Ollama) | Clef Flash-9B (Cloudflare, Ollama) | Laya (encoder, Ollama) |
 |---|---|---|---|---|---|
@@ -147,7 +147,7 @@ Accept only answers at or above a cutoff and send the rest for manual review: ac
 | ≥ 0.90 | 0.98 (71%) | 0.96 (86%) | 1.00 (30%) | 0.99 (67%) | 0.90 (12%) |
 | ≥ 0.95 | 1.00 (56%) | 0.96 (83%) | 0.99 (13%) | 0.99 (52%) | 1.00 (3%) |
 
-Charts: [cost vs accuracy](assets/charts/01_cost_vs_accuracy.png), [time per opinion](assets/charts/02_time_per_opinion.png), [accuracy by question](assets/charts/03_accuracy_by_question.png), [accuracy by language](assets/charts/04_accuracy_by_language.png), [rating vs real](assets/charts/05_rating_vs_real.png), [durian elo](assets/charts/06_durian_elo.png), [time vs accuracy](assets/charts/07_time_vs_accuracy.png). The Durian Elo (part 2) is in `results/summary.md`.
+Charts: [cost vs accuracy](assets/charts/01_cost_vs_accuracy.png), [time per opinion](assets/charts/02_time_per_opinion.png), [accuracy by question](assets/charts/03_accuracy_by_question.png), [accuracy by language](assets/charts/04_accuracy_by_language.png), [rating vs real](assets/charts/05_rating_vs_real.png), [time vs accuracy](assets/charts/07_time_vs_accuracy.png), [accept or review](assets/charts/08_accept_or_review.png).
 
 **Observations**
 

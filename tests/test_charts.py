@@ -8,13 +8,14 @@ import pandas as pd
 from charts import CHART_FILES, png_size, save_all
 
 
-def test_save_all_writes_seven_wide_pngs(tmp_path: Path) -> None:
+def test_save_all_writes_eight_wide_pngs(tmp_path: Path) -> None:
     summary = pd.DataFrame(
         {
             "label": ["Jev", "Local LLM", "GPT", "Kev"],
             "family": ["decision_cloud", "llm_local", "llm_cloud", "decision_local"],
             "local": [False, True, False, True],
             "headline": [0.8, 0.6, 0.75, 0.7],
+            "answer_acc": [0.9, 0.7, 0.94, 0.86],
             "usd_per_1m_opinions": [42.0, 0.0, 900.0, 0.0],
             "p50_s": [0.4, 12.0, 3.0, 0.3],
             "p95_s": [0.9, 20.0, 5.0, 0.5],
@@ -53,8 +54,26 @@ def test_save_all_writes_seven_wide_pngs(tmp_path: Path) -> None:
     )
     finals = {"Jev": {"musang_king": 1450, "black_thorn": 1530, "red_prawn": 1520}}
 
+    review = pd.DataFrame(
+        {
+            "solution": ["Jev"] * 3 + ["Kev"] * 3,
+            "review_share": [0.0, 0.175, 0.35] * 2,
+            "accuracy": [0.9, 0.95, 0.99, 0.86, 0.9, 0.96],
+            "kept": [700, 578, 455] * 2,
+        }
+    )
     figures = save_all(
-        summary, by_question, by_language, points, history, finals, tmp_path, "2026-10-23", "M2"
+        summary,
+        by_question,
+        by_language,
+        points,
+        history,
+        finals,
+        tmp_path,
+        "2026-10-23",
+        "M2",
+        review=review,
+        n_opinions=83,
     )
     assert list(figures) == list(CHART_FILES)
     for file in CHART_FILES.values():
@@ -64,11 +83,20 @@ def test_save_all_writes_seven_wide_pngs(tmp_path: Path) -> None:
 
 
 def test_charts_tolerate_empty_input(tmp_path: Path) -> None:
-    columns = ["label", "family", "local", "headline", "usd_per_1m_opinions", "p50_s", "p95_s"]
+    columns = [
+        "label",
+        "family",
+        "local",
+        "headline",
+        "answer_acc",
+        "usd_per_1m_opinions",
+        "p50_s",
+        "p95_s",
+    ]
     summary = pd.DataFrame(columns=columns).astype({"local": bool, "headline": float})
     empty_table = pd.DataFrame()
     points = pd.DataFrame(columns=["label", "family", "opinion_id", "real_score", "overall_rating"])
     history = pd.DataFrame(columns=["when", "kind", "musang_king", "black_thorn", "red_prawn"])
     figures = save_all(summary, empty_table, empty_table, points, history, {}, tmp_path, "d")
-    assert len(figures) == 7
+    assert len(figures) == 8
     assert np.all([png_size(tmp_path / file)[0] >= 1600 for file in CHART_FILES.values()])
