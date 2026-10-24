@@ -1,0 +1,25 @@
+{
+  "answer": {
+    "smell_mentioned": true,
+    "taste_mentioned": false,
+    "texture_mentioned": true,
+    "value_mentioned": false,
+    "quality_mentioned": true,
+    "aftermath_mentioned": false,
+    "smell_sentiment": "positive",
+    "taste_sentiment": "positive",
+    "texture_sentiment": "positive",
+    "value_sentiment": "positive",
+    "quality_sentiment": "positive",
+    "aftermath_sentiment": "positive",
+    "overall_rating": "9",
+    "overall_sentiment": "mixed",
+    "humour": "clearly humorous",
+    "compares": false,
+    "preferred": "black_thorn",
+    "variety": "black_thorn"
+  },
+  "response": {
+    "id": "resp_test"
+  }
+}

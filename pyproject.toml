@@ -1,0 +1,55 @@
+[project]
+name = "jev-on-durians"
+version = "0.1.0"
+description = "Decision models (Jev, Kev and co.) vs LLMs on 83 durian opinions - a tutorial notebook and a benchmark"
+requires-python = ">=3.14"
+dependencies = [
+    "requests>=2.32",
+    "openai>=3.19",
+    "ollama>=0.5",
+    "anthropic>=1.8",
+    "pydantic>=2.11",
+    "pyyaml>=6.0",
+    "pandas>=2.3",
+    "numpy>=2.3",
+    "plotly>=7.1",
+    "kaleido>=1.5",
+    "python-dotenv>=1.1",
+    "tqdm>=4.67",
+    "packaging>=24",
+    "typesafe-sdk>=0.7",
+    "pydantic-ai-slim[openai,typesafe]>=2.60",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.16",
+    "ty>=0.0.84",
+    "pre-commit>=4.6",
+    "pytest>=9.1",
+    "jupyterlab>=4.6",
+    "ipykernel>=7.3",
+    "ipywidgets>=8.1",
+    "nbconvert>=7.16",
+    "nbformat>=5.10",
+]
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+py-modules = ["schema", "benchmarking", "metrics", "elo", "charts", "report"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["instructions", "Claude outputs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

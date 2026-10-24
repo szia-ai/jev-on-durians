@@ -1,0 +1,407 @@
+{
+  "id": "dec_test",
+  "model": "gpt-6-luna",
+  "answers": [
+    {
+      "type": "predicate",
+      "name": "smell_mentioned",
+      "probability": 0.9
+    },
+    {
+      "type": "predicate",
+      "name": "taste_mentioned",
+      "probability": 0.2
+    },
+    {
+      "type": "predicate",
+      "name": "texture_mentioned",
+      "probability": 0.9
+    },
+    {
+      "type": "predicate",
+      "name": "value_mentioned",
+      "probability": 0.2
+    },
+    {
+      "type": "predicate",
+      "name": "quality_mentioned",
+      "probability": 0.9
+    },
+    {
+      "type": "predicate",
+      "name": "aftermath_mentioned",
+      "probability": 0.2
+    },
+    {
+      "type": "score",
+      "name": "smell_sentiment",
+      "score": 3.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "very negative",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "negative",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "neutral or not mentioned",
+          "probability": 0.0
+        },
+        {
+          "value": 4,
+          "label": "positive",
+          "probability": 0.5
+        },
+        {
+          "value": 5,
+          "label": "very positive",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "score",
+      "name": "taste_sentiment",
+      "score": 3.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "very negative",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "negative",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "neutral or not mentioned",
+          "probability": 0.0
+        },
+        {
+          "value": 4,
+          "label": "positive",
+          "probability": 0.5
+        },
+        {
+          "value": 5,
+          "label": "very positive",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "score",
+      "name": "texture_sentiment",
+      "score": 3.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "very negative",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "negative",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "neutral or not mentioned",
+          "probability": 0.0
+        },
+        {
+          "value": 4,
+          "label": "positive",
+          "probability": 0.5
+        },
+        {
+          "value": 5,
+          "label": "very positive",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "score",
+      "name": "value_sentiment",
+      "score": 3.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "very negative",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "negative",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "neutral or not mentioned",
+          "probability": 0.0
+        },
+        {
+          "value": 4,
+          "label": "positive",
+          "probability": 0.5
+        },
+        {
+          "value": 5,
+          "label": "very positive",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "score",
+      "name": "quality_sentiment",
+      "score": 3.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "very negative",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "negative",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "neutral or not mentioned",
+          "probability": 0.0
+        },
+        {
+          "value": 4,
+          "label": "positive",
+          "probability": 0.5
+        },
+        {
+          "value": 5,
+          "label": "very positive",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "score",
+      "name": "aftermath_sentiment",
+      "score": 3.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "very negative",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "negative",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "neutral or not mentioned",
+          "probability": 0.0
+        },
+        {
+          "value": 4,
+          "label": "positive",
+          "probability": 0.5
+        },
+        {
+          "value": 5,
+          "label": "very positive",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "score",
+      "name": "overall_rating",
+      "score": 8.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "1 - awful",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "2",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "3",
+          "probability": 0.0
+        },
+        {
+          "value": 4,
+          "label": "4",
+          "probability": 0.0
+        },
+        {
+          "value": 5,
+          "label": "5 - average",
+          "probability": 0.0
+        },
+        {
+          "value": 6,
+          "label": "6",
+          "probability": 0.0
+        },
+        {
+          "value": 7,
+          "label": "7",
+          "probability": 0.0
+        },
+        {
+          "value": 8,
+          "label": "8",
+          "probability": 0.0
+        },
+        {
+          "value": 9,
+          "label": "9",
+          "probability": 0.5
+        },
+        {
+          "value": 10,
+          "label": "10 - the best durian ever",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "name": "overall_sentiment",
+      "choice": "mixed",
+      "confidence": 0.7,
+      "probabilities": [
+        {
+          "value": "positive",
+          "probability": 0.09999999999999999
+        },
+        {
+          "value": "mixed",
+          "probability": 0.7
+        },
+        {
+          "value": "negative",
+          "probability": 0.09999999999999999
+        },
+        {
+          "value": "neutral",
+          "probability": 0.09999999999999999
+        }
+      ]
+    },
+    {
+      "type": "score",
+      "name": "humour",
+      "score": 2.5,
+      "confidence": 0.5,
+      "probabilities": [
+        {
+          "value": 1,
+          "label": "not humorous",
+          "probability": 0.0
+        },
+        {
+          "value": 2,
+          "label": "slightly humorous",
+          "probability": 0.0
+        },
+        {
+          "value": 3,
+          "label": "clearly humorous",
+          "probability": 0.5
+        },
+        {
+          "value": 4,
+          "label": "laugh out loud",
+          "probability": 0.5
+        }
+      ]
+    },
+    {
+      "type": "predicate",
+      "name": "compares",
+      "probability": 0.2
+    },
+    {
+      "type": "choice",
+      "name": "preferred",
+      "choice": "black_thorn",
+      "confidence": 0.7,
+      "probabilities": [
+        {
+          "value": "musang_king",
+          "probability": 0.075
+        },
+        {
+          "value": "black_thorn",
+          "probability": 0.7
+        },
+        {
+          "value": "red_prawn",
+          "probability": 0.075
+        },
+        {
+          "value": "other",
+          "probability": 0.075
+        },
+        {
+          "value": "none",
+          "probability": 0.075
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "name": "variety",
+      "choice": "black_thorn",
+      "confidence": 0.7,
+      "probabilities": [
+        {
+          "value": "musang_king",
+          "probability": 0.09999999999999999
+        },
+        {
+          "value": "black_thorn",
+          "probability": 0.7
+        },
+        {
+          "value": "red_prawn",
+          "probability": 0.09999999999999999
+        },
+        {
+          "value": "not_named",
+          "probability": 0.09999999999999999
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 130,
+    "input_tokens_details": {
+      "cached_tokens": 30
+    }
+  }
+}

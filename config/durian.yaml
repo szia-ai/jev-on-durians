@@ -1,0 +1,86 @@
+# config/durian.yaml - the single source of truth for the Durian Battle questions (v3, 2026-10-23)
+# Every API payload (System One, OpenAI Decisions) and the LLM response model are built from this file.
+# The model only ever sees the opinion text (`quote`), in its original language.
+
+version: 3
+
+durians:
+  musang_king: "Musang King, also called Mao Shan Wang (MSW), D197 or 猫山王"
+  black_thorn: "Black Thorn, also called Ochee, Duri Hitam, D200 or 黑刺"
+  red_prawn: "Red Prawn, also called Ang Hay (Ang Hae), Udang Merah, Hong Xia, D175 or 红虾"
+
+aspects:   # each aspect -> one "<aspect>_mentioned" yes/no question + one "<aspect>_sentiment" score
+  smell: "the smell or aroma of the durian - loving it, hating it, a smell that lingers"
+  taste: "the taste or flavour - sweetness, bitterness, richness, boozy notes, being cloying"
+  texture: "the texture of the flesh - creamy, custardy, sticky, soft, firm, mealy, dry"
+  value: "the price or value for money - expensive, cheap, worth it, how much flesh you get for the money"
+  quality: "freshness, ripeness, appearance or defects - colour, size of the flesh or seeds, unripe or inconsistent fruit"
+  aftermath: "what happens after eating - a lingering smell or taste, burps, feeling stuffed or sick, complaints from others"
+
+question_templates:   # expanded once per aspect -> 12 questions
+  mentioned:
+    type: yes_no        # System One: noul · OpenAI Decisions: predicate · LLM: bool
+    gold: true
+    instructions: "Does the text talk about {aspect_definition}?"
+  sentiment:
+    type: score         # 5 levels, lowest first -> normalised to 0..1
+    gold: false         # no human label; compared with a reference model and across systems
+    instructions: "How does the writer feel about {aspect_definition}? If the text doesn't mention it, answer 'neutral or not mentioned'."
+    levels:
+      - "very negative"
+      - "negative"
+      - "neutral or not mentioned"
+      - "positive"
+      - "very positive"
+
+questions:            # 6 more -> 18 questions per opinion, all sent in ONE request
+  overall_rating:
+    type: score         # 10 levels -> 0..1; compared with the writers' own scores (real_score, 8 records)
+    gold: false
+    instructions: "If the writer had to rate this durian from 1 to 10, what score would they give?"
+    levels: ["1 - awful", "2", "3", "4", "5 - average", "6", "7", "8", "9", "10 - the best durian ever"]
+  overall_sentiment:
+    type: choice
+    gold: true
+    instructions: "What is the writer's overall feeling about this durian?"
+    options:
+      positive: "clearly favourable"
+      mixed: "clear positives and clear negatives"
+      negative: "clearly unfavourable"
+      neutral: "descriptive, no clear judgement"
+  humour:
+    type: score         # 4 levels -> 0..1; no human label (compared across systems)
+    gold: false
+    instructions: "How humorous, witty or sarcastic is the text?"
+    levels: ["not humorous", "slightly humorous", "clearly humorous", "laugh out loud"]
+  compares:
+    type: yes_no
+    gold: true
+    instructions: >-
+      Does the text explicitly compare this durian with another durian variety - a named one, or
+      'other durians', 'by comparison', 'unlike X'? A superlative alone ('my favourite',
+      'the most expensive') is not a comparison.
+  preferred:
+    type: choice
+    gold: true          # scored only where gold.compares is true
+    instructions: "If the text compares durian varieties, which one does the writer prefer overall?"
+    options:
+      musang_king: "{durians.musang_king}"
+      black_thorn: "{durians.black_thorn}"
+      red_prawn: "{durians.red_prawn}"
+      other: "another durian variety"
+      none: "no comparison, or no clear preference"
+  variety:
+    type: choice
+    gold: true          # scored only where names_own_variety is true
+    instructions: "Which durian variety is the text about?"
+    options:
+      musang_king: "{durians.musang_king}"
+      black_thorn: "{durians.black_thorn}"
+      red_prawn: "{durians.red_prawn}"
+      not_named: "the text doesn't name the durian"
+
+normalisation:
+  score: "probability-weighted level index / (number of levels - 1) -> 0..1 (check each API's index base via its legend)"
+  yes_no: "decision models: the probability of yes; LLMs: 1.0 or 0.0"
+  real_score: "already 0..1 in the data (e.g. 75/100 -> 0.75, 4.5/5 -> 0.9)"

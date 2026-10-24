@@ -1,0 +1,7 @@
+﻿id,set,variety,language,quote,quote_en,names_own_variety,mentions_other_variety,writer_id,real_score,published,gold_smell,gold_taste,gold_texture,gold_value,gold_quality,gold_aftermath,gold_overall_sentiment,gold_compares,gold_preferred
+t-mk-01,main,musang_king,en,"Creamy and bitter, far better than the Black Thorn I had last week.",,False,True,writer-1,0.9,2024-01-01,0,1,1,0,0,0,positive,1,musang_king
+t-bt-01,main,black_thorn,zh,黑刺很甜，比猫山王好吃。,"Black Thorn is sweet, tastier than Musang King.",True,True,writer-1,,2024-02-01,0,1,0,0,0,0,positive,1,black_thorn
+t-rp-01,main,red_prawn,ms,"Udang merah ni mahal sangat, tak berbaloi langsung.","This Red Prawn is far too expensive, not worth it at all.",True,False,writer-2,,2023-05-05,0,0,0,1,0,0,negative,0,none
+t-rp-02,reserve,red_prawn,en,Smells heavenly and tastes even better.,,False,False,writer-3,,,1,1,0,0,0,0,positive,0,none
+t-mk-02,main,musang_king,ms,"Musang King sedap tapi lemak sangat, lepas tu muak.","Musang King is tasty but very rich, then cloying.",True,False,writer-2,0.6,2023-06-06,0,1,0,0,0,1,mixed,0,none
+t-bt-02,main,black_thorn,en,"Black Thorn: fine, nothing special, a bit unripe.",,True,False,writer-3,,2022-01-01,0,0,0,0,1,0,neutral,0,none
