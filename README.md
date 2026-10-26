@@ -8,6 +8,8 @@ Testing system one models on a durian data set (slightly useful)
 
 ## What is this?
 
+Read the full blog post here: [Know When to Ask for Help: Decision Models Meet the Durian](https://www.szia.ai/blog/jev-decision-models-explained)
+
 In September 2026, a start-up called TypeSafe AI released **Jev** - an AI model that can't write a
 single sentence. It reads a text and answers typed questions about it (yes or no, pick one, score it
 on a scale) with probabilities instead of words. TypeSafe calls it a "System One" model, after the
